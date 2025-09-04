@@ -6,7 +6,7 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _onLanguageSelected(BuildContext context, String languageCode) {
-    // save selected language & navigate
+    // Save the selected language here if needed
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -19,93 +19,99 @@ class OnboardingScreen extends StatelessWidget {
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
-              // 👨‍🌾 Farmer illustration
-              Expanded(
-                flex: 4,
+              // Illustration Image
+              Container(
+                padding: const EdgeInsets.all(24),
                 child: Image.asset(
                   'assets/images/farmer_illustration.png',
+                  width: 200,
                   fit: BoxFit.contain,
                 ),
               ),
+
               const SizedBox(height: 16),
-              // 👋 Welcome message
-              const Text(
-                'Welcome to Farm Assist!',
-                style: AppTextStyles.heading1,
+
+              // Welcome Text
+              Text(
+                'Welcome to Farmer Assist',
+                style: AppTextStyles.heading2.copyWith(
+                  color: AppColors.textDark,
+                ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Please choose your language',
+
+              const SizedBox(height: 16),
+
+              Text(
+                'Select your preferred language to get started',
                 style: AppTextStyles.bodyTextLight,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
 
-              // 🌐 Language buttons
-              Expanded(
-                flex: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryIndigo,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () => _onLanguageSelected(context, 'om'),
-                        child: const Text(
-                          'Afaan Oromo',
-                          style: AppTextStyles.buttonText,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryIndigo,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () => _onLanguageSelected(context, 'am'),
-                        child: const Text(
-                          'Amharic',
-                          style: AppTextStyles.buttonText,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryIndigo,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () => _onLanguageSelected(context, 'en'),
-                        child: const Text(
-                          'English',
-                          style: AppTextStyles.buttonText,
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 32),
+
+              // English Button
+              ElevatedButton(
+                onPressed: () => _onLanguageSelected(context, 'en'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentEmerald,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 48,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'English',
+                  style: AppTextStyles.buttonText.copyWith(color: Colors.white),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Amharic Button (example)
+              ElevatedButton(
+                onPressed: () => _onLanguageSelected(context, 'am'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentEmerald,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 48,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Amharic',
+                  style: AppTextStyles.buttonText.copyWith(color: Colors.white),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Oromo Button (example)
+              ElevatedButton(
+                onPressed: () => _onLanguageSelected(context, 'om'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentEmerald,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 48,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Oromo',
+                  style: AppTextStyles.buttonText.copyWith(color: Colors.white),
                 ),
               ),
             ],
