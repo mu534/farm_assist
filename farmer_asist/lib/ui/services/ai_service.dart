@@ -1,8 +1,22 @@
+import 'dart:io';
+
+class AIResult {
+  final String diseaseName;
+  final String recommendation;
+
+  AIResult({required this.diseaseName, required this.recommendation});
+}
+
 class AIService {
-  Future<String> predictPlantDisease(String imagePath) async {
-    // TODO: Implement actual AI prediction logic.
-    // For now, return a dummy result after a short delay.
-    await Future.delayed(const Duration(seconds: 2));
-    return 'Healthy';
+  // Existing code
+
+  Future<AIResult> analyzeImage(File imageFile) async {
+    // TODO: Implement your AI analysis logic here.
+    // For now, return a dummy result.
+    await Future.delayed(const Duration(seconds: 1));
+    return AIResult(
+      diseaseName: 'Unknown Disease',
+      recommendation: 'No recommendation available.',
+    );
   }
 }
