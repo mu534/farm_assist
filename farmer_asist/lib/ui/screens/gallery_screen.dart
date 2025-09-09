@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:farmer_asist/core/themes.dart';
 
 class GalleryScreen extends StatefulWidget {
-  final XFile? initialImage; // Captured image from CameraScreen
+  final XFile? initialImage;
 
   const GalleryScreen({super.key, this.initialImage});
 
@@ -23,7 +23,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
     _loadImages();
   }
 
-  /// Load gallery images and insert captured image first if exists
   Future<void> _loadImages() async {
     final pickedImages = await _picker.pickMultiImage();
     setState(() {
@@ -32,9 +31,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
       // Insert captured image at the beginning
       if (widget.initialImage != null) {
         _images.insert(0, widget.initialImage!);
-        _selectedIndex = 0; // highlight captured image
+        _selectedIndex = 0;
       } else if (_images.isNotEmpty) {
-        _selectedIndex = 0; // highlight first gallery image
+        _selectedIndex = 0;
       } else {
         _selectedIndex = -1;
       }
@@ -44,10 +43,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
   void _onSelectImage(int index) {
     setState(() => _selectedIndex = index);
     final selectedImage = _images[index];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Selected image: ${selectedImage.path}')),
-    );
-    // Here you can add logic to send the image to another screen or process it
+
+    // Return selected image path to previous screen
+    Navigator.pop(context, selectedImage.path);
   }
 
   @override

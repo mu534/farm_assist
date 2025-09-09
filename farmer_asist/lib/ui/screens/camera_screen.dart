@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:farmer_asist/core/themes.dart';
@@ -38,13 +37,18 @@ class _CameraScreenState extends State<CameraScreen> {
     if (!_controller!.value.isInitialized) return;
     final XFile file = await _controller!.takePicture();
 
-    // Navigate to GalleryScreen with the correct parameter name
-    Navigator.push(
+    // Navigate to GalleryScreen and pass the captured image
+    final selectedImagePath = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => GalleryScreen(initialImage: file),
       ),
     );
+
+    if (selectedImagePath != null) {
+      // Placeholder: Send this image path to AI detection
+      print('Selected image for AI: $selectedImagePath');
+    }
   }
 
   @override
