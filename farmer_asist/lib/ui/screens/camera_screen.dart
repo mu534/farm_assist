@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:farmer_asist/core/themes.dart';
 import 'package:farmer_asist/ui/screens/gallery_screen.dart';
-import 'package:farmer_asist/ui/screens/result_screen.dart';
-import 'package:farmer_asist/ui/services/ai_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -16,7 +14,7 @@ class _CameraScreenState extends State<CameraScreen> {
   late List<CameraDescription> _cameras;
   CameraController? _controller;
   bool _isInitialized = false;
-  bool _isTakingPicture = false; // prevent multiple taps
+  bool _isTakingPicture = false;
 
   @override
   void initState() {
@@ -25,67 +23,31 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _initCamera() async {
-    try {
-      _cameras = await availableCameras();
-      if (_cameras.isEmpty) {
-        throw Exception('No cameras found');
-      }
-
-      _controller = CameraController(
-        _cameras.first,
-        ResolutionPreset.high,
-        enableAudio: false,
-      );
-
-      await _controller!.initialize();
-      if (!mounted) return;
-      setState(() => _isInitialized = true);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera initialization failed: $e')),
-        );
-      }
-    }
+    _cameras = await availableCameras();
+    _controller = CameraController(_cameras.first, ResolutionPreset.high);
+    await _controller!.initialize();
+    if (!mounted) return;
+    setState(() => _isInitialized = true);
   }
 
   Future<void> _takePicture() async {
-    if (!(_controller?.value.isInitialized ?? false) || _isTakingPicture) {
-      return;
-    }
+    if (!_controller!.value.isInitialized || _isTakingPicture) return;
 
     try {
       setState(() => _isTakingPicture = true);
-
       final XFile file = await _controller!.takePicture();
 
-      // Navigate to GalleryScreen to preview image
-      final selectedImagePath = await Navigator.push(
+      // Navigate to GalleryScreen with captured image
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => GalleryScreen(initialImage: file),
         ),
       );
-
-      if (selectedImagePath != null) {
-        // Run AI detection
-        final aiService = AIService();
-        final result = await aiService.predictPlantDisease(selectedImagePath);
-
-        if (!mounted) return;
-
-        // Navigate to result screen
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ResultScreen(result: result)),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to take picture.')),
-        );
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to take picture.')));
     } finally {
       if (mounted) setState(() => _isTakingPicture = false);
     }

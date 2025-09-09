@@ -5,9 +5,10 @@ import 'package:farmer_asist/ui/models/plant_disease_model.dart';
 import 'package:farmer_asist/ui/services/ai_service.dart';
 
 class ResultScreen extends StatefulWidget {
-  final String imagePath;
+  final String? imagePath;
+  final PlantDiseaseModel? result;
 
-  const ResultScreen({super.key, required this.imagePath});
+  const ResultScreen({Key? key, this.imagePath, this.result}) : super(key: key);
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -22,12 +23,21 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    _analyzeImage();
+    if (widget.result != null) {
+      // Use precomputed result
+      _result = widget.result;
+      _isLoading = false;
+    } else if (widget.imagePath != null) {
+      _analyzeImage();
+    } else {
+      _error = "No image or result provided";
+      _isLoading = false;
+    }
   }
 
   Future<void> _analyzeImage() async {
     try {
-      final file = File(widget.imagePath);
+      final file = File(widget.imagePath!);
       final analysis = await _aiService.analyzeImage(file);
 
       if (!mounted) return;
@@ -64,29 +74,30 @@ class _ResultScreenState extends State<ResultScreen> {
           : _result == null
           ? const Center(child: Text('No result found'))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Image Preview
-                  Container(
-                    width: double.infinity,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.accentEmerald,
-                        width: 2,
+                  if (widget.imagePath != null)
+                    Container(
+                      width: double.infinity,
+                      height: 250,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.accentEmerald,
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(widget.imagePath!),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(widget.imagePath),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Disease Info
