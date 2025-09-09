@@ -2,6 +2,15 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        jcenter() // optional fallback
+
+        // Alibaba Maven mirrors (Kotlin DSL syntax)
+        maven {
+            url = uri("https://maven.aliyun.com/repository/google")
+        }
+        maven {
+            url = uri("https://maven.aliyun.com/repository/central")
+        }
     }
 }
 
@@ -12,6 +21,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

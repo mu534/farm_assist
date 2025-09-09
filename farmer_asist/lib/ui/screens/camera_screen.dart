@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:farmer_asist/core/themes.dart';
@@ -11,72 +12,44 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  CameraController? _cameraController;
+  late List<CameraDescription> _cameras;
+  CameraController? _controller;
   bool _isInitialized = false;
-  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _initCamera();
   }
 
-  Future<void> _initializeCamera() async {
-    try {
-      final cameras = await availableCameras();
-
-      if (cameras.isEmpty) {
-        setState(() {
-          _errorMessage = "No cameras found on this device.";
-        });
-        return;
-      }
-
-      _cameraController = CameraController(
-        cameras.first,
-        ResolutionPreset.high,
-        enableAudio: false,
-      );
-
-      await _cameraController!.initialize();
-
-      if (!mounted) return;
-      setState(() {
-        _isInitialized = true;
-      });
-    } catch (e, s) {
-      debugPrint("Camera initialization error: $e\n$s");
-      setState(() {
-        _errorMessage =
-            "Failed to initialize camera.\nPlease check permissions or use a real device.";
-      });
-    }
+  Future<void> _initCamera() async {
+    _cameras = await availableCameras();
+    _controller = CameraController(
+      _cameras.first,
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+    await _controller!.initialize();
+    if (!mounted) return;
+    setState(() => _isInitialized = true);
   }
 
-  Future<void> _captureImage() async {
-    if (!(_cameraController?.value.isInitialized ?? false)) return;
+  Future<void> _takePicture() async {
+    if (!_controller!.value.isInitialized) return;
+    final XFile file = await _controller!.takePicture();
 
-    try {
-      final image = await _cameraController!.takePicture();
-
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => GalleryScreen(initialImage: image),
-        ),
-      );
-    } catch (e) {
-      debugPrint('Error capturing image: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error capturing image: $e')));
-    }
+    // Navigate to GalleryScreen with the correct parameter name
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GalleryScreen(initialImage: file),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _cameraController?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -85,47 +58,32 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text('Camera'),
+        title: const Text('Capture Plant Image', style: AppTextStyles.heading2),
         backgroundColor: AppColors.backgroundLight,
-        elevation: 2,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: AppColors.primaryIndigo),
       ),
-      body: _errorMessage != null
-          ? Center(
-              child: Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-            )
-          : _isInitialized
+      body: _isInitialized
           ? Stack(
               children: [
-                CameraPreview(_cameraController!),
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.black54,
-                    child: const Text(
-                      'Frame the plant leaf properly',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
+                CameraPreview(_controller!),
                 Positioned(
                   bottom: 40,
                   left: 0,
                   right: 0,
                   child: Center(
                     child: ElevatedButton(
+                      onPressed: _takePicture,
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(24),
-                        backgroundColor: AppColors.primaryIndigo,
+                        padding: const EdgeInsets.all(20),
+                        backgroundColor: AppColors.accentEmerald,
                       ),
-                      onPressed: _captureImage,
-                      child: const Icon(Icons.camera_alt, color: Colors.white),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        size: 32,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

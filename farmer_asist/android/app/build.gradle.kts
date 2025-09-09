@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.farmer_asist"
-        minSdk = 23                  // ✅ Raised from 21 → 23 for camera/image_picker
+        minSdk = flutter.minSdkVersion                  // ✅ Raised from 21 → 23 for camera/image_picker
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
