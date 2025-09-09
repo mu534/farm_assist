@@ -14,6 +14,7 @@ class _CameraScreenState extends State<CameraScreen> {
   late List<CameraDescription> _cameras;
   CameraController? _controller;
   bool _isInitialized = false;
+  bool _isTakingPicture = false; // prevent multiple taps
 
   @override
   void initState() {
@@ -34,20 +35,32 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _takePicture() async {
-    if (!_controller!.value.isInitialized) return;
-    final XFile file = await _controller!.takePicture();
+    if (!_controller!.value.isInitialized || _isTakingPicture) return;
 
-    // Navigate to GalleryScreen and pass the captured image
-    final selectedImagePath = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GalleryScreen(initialImage: file),
-      ),
-    );
+    try {
+      setState(() => _isTakingPicture = true);
 
-    if (selectedImagePath != null) {
-      // Placeholder: Send this image path to AI detection
-      print('Selected image for AI: $selectedImagePath');
+      final XFile file = await _controller!.takePicture();
+
+      // Navigate to GalleryScreen
+      final selectedImagePath = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GalleryScreen(initialImage: file),
+        ),
+      );
+
+      if (selectedImagePath != null) {
+        // Placeholder for AI detection
+        print('Selected image path: $selectedImagePath');
+      }
+    } catch (e) {
+      print('Error taking picture: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to take picture.')));
+    } finally {
+      if (mounted) setState(() => _isTakingPicture = false);
     }
   }
 
@@ -76,19 +89,23 @@ class _CameraScreenState extends State<CameraScreen> {
                   left: 0,
                   right: 0,
                   child: Center(
-                    child: ElevatedButton(
-                      onPressed: _takePicture,
-                      style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(20),
-                        backgroundColor: AppColors.accentEmerald,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        size: 32,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: _isTakingPicture
+                        ? const CircularProgressIndicator(
+                            color: AppColors.accentEmerald,
+                          )
+                        : ElevatedButton(
+                            onPressed: _takePicture,
+                            style: ElevatedButton.styleFrom(
+                              shape: const CircleBorder(),
+                              padding: const EdgeInsets.all(20),
+                              backgroundColor: AppColors.accentEmerald,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 32,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ],

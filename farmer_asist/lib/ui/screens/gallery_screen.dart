@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:farmer_asist/core/themes.dart';
+import 'package:farmer_asist/ui/screens/image_preview_screen.dart';
 
 class GalleryScreen extends StatefulWidget {
   final XFile? initialImage;
@@ -44,8 +45,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
     setState(() => _selectedIndex = index);
     final selectedImage = _images[index];
 
-    // Return selected image path to previous screen
-    Navigator.pop(context, selectedImage.path);
+    // Navigate to preview + AI detection screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ImagePreviewScreen(
+          imagePath: selectedImage.path,
+          detectedDisease: 'Placeholder Disease', // Replace with AI result
+          recommendation:
+              'Placeholder Treatment', // Replace with AI recommendation
+        ),
+      ),
+    );
   }
 
   @override
