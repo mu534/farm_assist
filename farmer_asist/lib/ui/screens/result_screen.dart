@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/themes.dart';
+import 'package:farmer_asist/core/themes.dart';
 
 class ResultScreen extends StatelessWidget {
   final String result;
