@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:farmer_asist/core/themes.dart';
 import 'package:farmer_asist/ui/screens/image_preview_screen.dart';
+import 'package:farmer_asist/ui/services/ai_service.dart';
 
 class GalleryScreen extends StatefulWidget {
   final XFile? initialImage;
@@ -17,6 +18,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
   final ImagePicker _picker = ImagePicker();
   List<XFile> _images = [];
   int _selectedIndex = -1;
+  bool _loading = false;
 
   @override
   void initState() {
@@ -24,39 +26,56 @@ class _GalleryScreenState extends State<GalleryScreen> {
     _loadImages();
   }
 
+  /// Loads images from device gallery
   Future<void> _loadImages() async {
-    final pickedImages = await _picker.pickMultiImage();
-    setState(() {
-      _images = pickedImages ?? [];
+    try {
+      final pickedImages = await _picker.pickMultiImage();
+      setState(() {
+        _images = pickedImages ?? [];
 
-      // Insert captured image at the beginning
-      if (widget.initialImage != null) {
-        _images.insert(0, widget.initialImage!);
-        _selectedIndex = 0;
-      } else if (_images.isNotEmpty) {
-        _selectedIndex = 0;
-      } else {
-        _selectedIndex = -1;
-      }
-    });
+        // Insert captured image at the beginning
+        if (widget.initialImage != null) {
+          _images.insert(0, widget.initialImage!);
+          _selectedIndex = 0;
+        } else if (_images.isNotEmpty) {
+          _selectedIndex = 0;
+        } else {
+          _selectedIndex = -1;
+        }
+      });
+    } catch (e) {
+      debugPrint("Error loading images: $e");
+    }
   }
 
-  void _onSelectImage(int index) {
-    setState(() => _selectedIndex = index);
+  /// Select an image and run AI analysis
+  Future<void> _onSelectImage(int index) async {
+    setState(() => _loading = true);
     final selectedImage = _images[index];
 
-    // Navigate to preview + AI detection screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ImagePreviewScreen(
-          imagePath: selectedImage.path,
-          detectedDisease: 'Placeholder Disease', // Replace with AI result
-          recommendation:
-              'Placeholder Treatment', // Replace with AI recommendation
+    try {
+      // Run AI service on selected image
+      final aiResult = await AIService().analyzeImage(File(selectedImage.path));
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ImagePreviewScreen(imagePath: selectedImage.path),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint("AI analysis failed: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to analyze image")));
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
   }
 
   @override
@@ -75,7 +94,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
         ],
       ),
-      body: _images.isEmpty
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _images.isEmpty
           ? const Center(child: Text('No images found'))
           : GridView.builder(
               padding: const EdgeInsets.all(12),

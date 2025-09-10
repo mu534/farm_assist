@@ -8,7 +8,7 @@ class ResultScreen extends StatefulWidget {
   final String? imagePath;
   final PlantDiseaseModel? result;
 
-  const ResultScreen({Key? key, this.imagePath, this.result}) : super(key: key);
+  const ResultScreen({super.key, this.imagePath, this.result});
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -42,7 +42,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
       if (!mounted) return;
       setState(() {
-        _result = analysis;
+        _result = analysis; // ✅ this is already PlantDiseaseModel
         _isLoading = false;
       });
     } catch (e) {
