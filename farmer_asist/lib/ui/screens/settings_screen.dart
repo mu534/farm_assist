@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:farmer_asist/core/themes.dart';
+import 'package:farmer_asist/ui/providers/language_provider.dart';
+import 'package:farmer_asist/ui/services/localization_service.dart';
+import 'package:farmer_asist/ui/widgets/language_selector.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
@@ -18,13 +24,24 @@ class SettingsScreen extends StatelessWidget {
         children: [
           const Text('Preferences', style: AppTextStyles.heading2),
           const SizedBox(height: 12),
-          _buildCard(
-            context,
-            title: 'Change Language',
-            subtitle: 'Select your preferred language',
-            icon: Icons.language,
-            onTap: () {},
+
+          // Language Selector
+          LanguageSelector(
+            onEnglish: () async {
+              await languageProvider.changeLanguage('en');
+              await LocalizationService().changeLocale(const Locale('en'));
+            },
+            onAmharic: () async {
+              await languageProvider.changeLanguage('am');
+              await LocalizationService().changeLocale(const Locale('am'));
+            },
+            onOromo: () async {
+              await languageProvider.changeLanguage('om');
+              await LocalizationService().changeLocale(const Locale('om'));
+            },
           ),
+
+          const SizedBox(height: 24),
           _buildCard(
             context,
             title: 'Offline Mode',
@@ -33,7 +50,7 @@ class SettingsScreen extends StatelessWidget {
             trailing: Switch(
               value: true,
               onChanged: (val) {},
-              activeColor: AppColors.primaryIndigo,
+              activeThumbColor: AppColors.primaryIndigo,
             ),
           ),
           _buildCard(
