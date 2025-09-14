@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:farmer_asist/core/themes.dart';
 import 'package:farmer_asist/ui/screens/camera_screen.dart';
 import 'package:farmer_asist/ui/screens/gallery_screen.dart';
 import 'package:farmer_asist/ui/screens/settings_screen.dart';
+import 'package:farmer_asist/ui/services/localization_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localization = Provider.of<LocalizationService>(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
@@ -16,7 +20,10 @@ class HomeScreen extends StatelessWidget {
           children: [
             const Icon(Icons.agriculture, color: AppColors.primaryIndigo),
             const SizedBox(width: 8),
-            const Text('Farm Assist', style: AppTextStyles.heading2),
+            Text(
+              localization.translate('app_title'),
+              style: AppTextStyles.heading2,
+            ),
           ],
         ),
         elevation: 2,
@@ -32,7 +39,7 @@ class HomeScreen extends StatelessWidget {
             // 🌱 Take Photo
             _HomeCardButton(
               icon: Icons.camera_alt,
-              label: 'Take Photo',
+              label: localization.translate('home_camera'),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -45,7 +52,7 @@ class HomeScreen extends StatelessWidget {
             // 🌱 Upload Photo
             _HomeCardButton(
               icon: Icons.photo_library,
-              label: 'Upload Photo',
+              label: localization.translate('home_gallery'),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -60,7 +67,7 @@ class HomeScreen extends StatelessWidget {
             // 🌱 Settings
             _HomeCardButton(
               icon: Icons.settings,
-              label: 'Settings',
+              label: localization.translate('home_settings'),
               onPressed: () {
                 Navigator.push(
                   context,

@@ -29,15 +29,15 @@ class SettingsScreen extends StatelessWidget {
           LanguageSelector(
             onEnglish: () async {
               await languageProvider.changeLanguage('en');
-              await LocalizationService().changeLocale(const Locale('en'));
+              await LocalizationService().changeLocale('en');
             },
             onAmharic: () async {
               await languageProvider.changeLanguage('am');
-              await LocalizationService().changeLocale(const Locale('am'));
+              await LocalizationService().changeLocale('am');
             },
             onOromo: () async {
               await languageProvider.changeLanguage('om');
-              await LocalizationService().changeLocale(const Locale('om'));
+              await LocalizationService().changeLocale('om');
             },
           ),
 

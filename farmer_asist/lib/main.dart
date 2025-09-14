@@ -8,9 +8,16 @@ import 'core/themes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final languageProvider = LanguageProvider();
+  await languageProvider.loadSavedLanguage(); // public method now
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => LanguageProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<LanguageProvider>.value(value: languageProvider),
+        ChangeNotifierProvider(create: (_) => LocalizationService()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -21,17 +28,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Farm Assist',
-      theme: lightTheme,
-      locale: languageProvider.currentLocale,
-      supportedLocales: const [Locale('en'), Locale('am'), Locale('om')],
-      localizationsDelegates: LocalizationService.localizationsDelegates,
-      home: const SplashScreen(),
-      routes: {'/onboarding_screen': (context) => const OnboardingScreen()},
+    return Consumer2<LanguageProvider, LocalizationService>(
+      builder: (context, languageProvider, localizationService, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Farm Assist',
+          theme: lightTheme,
+          locale: languageProvider.currentLocale,
+          supportedLocales: const [Locale('en'), Locale('am'), Locale('om')],
+          localizationsDelegates: LocalizationService.localizationsDelegates,
+          home: const SplashScreen(),
+          routes: {'/onboarding_screen': (context) => const OnboardingScreen()},
+        );
+      },
     );
   }
 }
