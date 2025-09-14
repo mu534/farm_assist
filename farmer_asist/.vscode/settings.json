@@ -3,5 +3,6 @@
   "dart.flutterSdkPaths": [
     "C:\flutter\flutter"
   ],
-  "dart.sdkPath": null
+  "dart.sdkPath": null,
+  "cmake.sourceDirectory": "C:/Users/mudasir/farmer_asist/linux"
 }
