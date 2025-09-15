@@ -1,12 +1,12 @@
 const Map<String, String> om = {
-  'app_title': 'Gabbaraa Gargaarsa',
+  'app_title': 'Gargaaraa Qotee-Bulaa',
   'splash_message': 'Dhukkuba biqilaa salphatti adda baafadhu',
-  'onboarding_title': 'Baga Nagaan Dhuftan Gara Gabbaraa Gargaarsa',
+  'onboarding_title': 'Baga Nagaan Dhuftan Gara Gargaaraa Qotee-Bulaa',
   'onboarding_subtitle':
-      'Suuraa biqilaa kaappachuu ykn filachuudhaan dhukkuba adda baafadhu',
+      'Suuraa biqilaa kaafachuu ykn filachuudhaan dhukkuba adda baafadhu',
   'home_camera': 'Kaameraa',
   'home_gallery': 'Galmeewwan',
-  'home_settings': 'Qindaa\'inoota',
+  'home_settings': 'Qindaainoota',
   'capture_plant_image': 'Suuraa Biqilaa Kaappadhu',
   'choose_photo': 'Suuraa Filadhu',
   'plant_analysis': 'Xiinxala Biqilaa',
