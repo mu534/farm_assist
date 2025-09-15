@@ -4,19 +4,23 @@ import 'package:farmer_asist/ui/providers/language_provider.dart';
 import 'package:farmer_asist/ui/services/localization_service.dart';
 import 'package:farmer_asist/ui/screens/splash_screen.dart';
 import 'package:farmer_asist/ui/screens/onboarding_screen.dart';
+
+
 import 'core/themes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize LanguageProvider and load saved language
   final languageProvider = LanguageProvider();
-  await languageProvider.loadSavedLanguage(); // load saved language
+  await languageProvider.loadSavedLanguage();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<LanguageProvider>.value(value: languageProvider),
         ChangeNotifierProvider(create: (_) => LocalizationService()),
+         ChangeNotifierProvider(create: (_) => CameraProvider()),
       ],
       child: const MyApp(),
     ),
@@ -49,7 +53,7 @@ class MyApp extends StatelessWidget {
             if (locale != null && locale.languageCode == 'om') {
               return const Locale('en');
             }
-            // Otherwise return the selected locale if supported
+            // Return the selected locale if supported
             for (var supportedLocale in supportedLocales) {
               if (supportedLocale.languageCode == locale?.languageCode) {
                 return supportedLocale;
@@ -59,7 +63,9 @@ class MyApp extends StatelessWidget {
             return const Locale('en');
           },
           home: const SplashScreen(),
-          routes: {'/onboarding_screen': (context) => const OnboardingScreen()},
+          routes: {
+            '/onboarding_screen': (context) => const OnboardingScreen(),
+          },
         );
       },
     );

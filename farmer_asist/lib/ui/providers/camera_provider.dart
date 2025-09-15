@@ -1,119 +1,84 @@
-import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:image/image.dart' as img;
-import 'package:farmer_asist/ui/services/ai_service.dart';
+import 'package:flutter/material.dart';
+import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
+import 'package:farmer_asist/ui/models/plant_disease_model.dart';
 
 class CameraProvider extends ChangeNotifier {
-  List<CameraDescription> _cameras = [];
-  CameraController? _controller;
-  bool _isInitialized = false;
-  bool _isTakingPicture = false;
+  CameraController? controller;
+  bool isDetecting = false;
+  List<ImageLabel> labels = [];
+  PlantDiseaseModel? detectedDisease;
 
-  // Leaf detection data
-  Rect? leafBoundingBox;
+  final ImageLabeler _imageLabeler =
+      ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.5));
 
-  CameraController? get controller => _controller;
-  bool get isInitialized => _isInitialized;
-  bool get isTakingPicture => _isTakingPicture;
-
-  Future<void> initCamera() async {
-    _cameras = await availableCameras();
-    if (_cameras.isEmpty) return;
-
-    _controller = CameraController(
-      _cameras.first,
-      ResolutionPreset.high,
+  /// Initialize camera and start real-time detection
+  Future<void> initializeCamera(CameraDescription camera) async {
+    controller = CameraController(
+      camera,
+      ResolutionPreset.medium, // medium for real-time performance
       enableAudio: false,
     );
 
-    await _controller!.initialize();
-    _isInitialized = true;
+    await controller!.initialize();
+
+    // Start real-time stream
+    await controller!.startImageStream((image) => _processCameraImage(image));
+
     notifyListeners();
-
-    // Start leaf detection stream
-    _startImageStream();
   }
 
-  Future<void> _startImageStream() async {
-    if (_controller == null || !_controller!.value.isInitialized) return;
-
-    _controller!.startImageStream((CameraImage image) async {
-      if (_isTakingPicture) return;
-
-      // Process image to detect leaf
-      Rect? detectedLeaf = await _detectLeaf(image);
-      if (detectedLeaf != null) {
-        leafBoundingBox = detectedLeaf;
-        notifyListeners();
-      }
-    });
-  }
-
-  /// Dummy leaf detection using AIService
-  Future<Rect?> _detectLeaf(CameraImage image) async {
-    // Convert CameraImage to File or bytes for AIService
-    // For demo purposes, we return a centered bounding box
-    final width = image.width.toDouble();
-    final height = image.height.toDouble();
-    return Rect.fromCenter(
-      center: Offset(width / 2, height / 2),
-      width: width / 3,
-      height: height / 3,
+  /// Convert CameraImage to InputImage
+  InputImage _convertCameraImage(CameraImage image) {
+    final allBytes = image.planes.fold<Uint8List>(
+      Uint8List(0),
+      (previous, plane) => Uint8List.fromList(previous + plane.bytes),
     );
+
+    // Metadata required for ML Kit
+    final metadata = InputImageMetadata(
+      size: Size(image.width.toDouble(), image.height.toDouble()),
+      rotation: InputImageRotation.rotation0deg,
+      bytesPerRow: image.planes[0].bytesPerRow,
+      format: InputImageFormat.bgra8888,
+    );
+
+    return InputImage.fromBytes(bytes: allBytes, metadata: metadata);
   }
 
-  Future<File?> takePicture() async {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        _isTakingPicture) return null;
+  /// Process each camera frame
+  void _processCameraImage(CameraImage image) async {
+    if (isDetecting) return;
+    isDetecting = true;
 
     try {
-      _isTakingPicture = true;
+      final inputImage = _convertCameraImage(image);
+      labels = await _imageLabeler.processImage(inputImage);
+
+      if (labels.isNotEmpty) {
+        final topLabel = labels.first;
+        detectedDisease = PlantDiseaseModel(
+          diseaseName: topLabel.label,
+          recommendation: 'Check plant health guide',
+          confidence: topLabel.confidence,
+        );
+      } else {
+        detectedDisease = null;
+      }
+
       notifyListeners();
-
-      final XFile file = await _controller!.takePicture();
-
-      // Crop to detected leaf bounding box if available
-      final croppedFile = await _cropToLeaf(file);
-
-      return croppedFile;
     } catch (e) {
-      debugPrint('Error taking picture: $e');
-      return null;
+      debugPrint('Detection error: $e');
     } finally {
-      _isTakingPicture = false;
-      notifyListeners();
+      isDetecting = false;
     }
-  }
-
-  Future<File> _cropToLeaf(XFile file) async {
-    if (leafBoundingBox == null) return File(file.path);
-
-    final bytes = await file.readAsBytes();
-    img.Image? capturedImage = img.decodeImage(bytes);
-    if (capturedImage == null) return File(file.path);
-
-    final cropRect = leafBoundingBox!;
-    final cropped = img.copyCrop(
-      capturedImage,
-      x: cropRect.left.toInt(),
-      y: cropRect.top.toInt(),
-      width: cropRect.width.toInt(),
-      height: cropRect.height.toInt(),
-    );
-
-    final croppedBytes = img.encodeJpg(cropped);
-    final croppedFile = File('${file.path}_leaf.jpg');
-    await croppedFile.writeAsBytes(croppedBytes);
-
-    return croppedFile;
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    controller?.dispose();
+    _imageLabeler.close();
     super.dispose();
   }
 }
