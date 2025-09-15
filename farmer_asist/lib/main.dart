@@ -30,6 +30,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<LanguageProvider, LocalizationService>(
       builder: (context, languageProvider, localizationService, child) {
+        // Update localizationService with the current language
+        localizationService.changeLocale(languageProvider.currentLocale.languageCode);
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Farm Assist',
@@ -44,3 +47,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
