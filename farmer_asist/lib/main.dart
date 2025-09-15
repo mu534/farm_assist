@@ -10,7 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final languageProvider = LanguageProvider();
-  await languageProvider.loadSavedLanguage(); // public method now
+  await languageProvider.loadSavedLanguage(); // load saved language
 
   runApp(
     MultiProvider(
@@ -38,8 +38,26 @@ class MyApp extends StatelessWidget {
           title: 'Farm Assist',
           theme: lightTheme,
           locale: languageProvider.currentLocale,
-          supportedLocales: const [Locale('en'), Locale('am'), Locale('om')],
+          supportedLocales: const [
+            Locale('en'), // fallback for Material widgets
+            Locale('am'),
+            Locale('om'), // your custom translations
+          ],
           localizationsDelegates: LocalizationService.localizationsDelegates,
+          localeResolutionCallback: (locale, supportedLocales) {
+            // Fallback 'om' to 'en' for Flutter widgets
+            if (locale != null && locale.languageCode == 'om') {
+              return const Locale('en');
+            }
+            // Otherwise return the selected locale if supported
+            for (var supportedLocale in supportedLocales) {
+              if (supportedLocale.languageCode == locale?.languageCode) {
+                return supportedLocale;
+              }
+            }
+            // Default fallback
+            return const Locale('en');
+          },
           home: const SplashScreen(),
           routes: {'/onboarding_screen': (context) => const OnboardingScreen()},
         );
@@ -47,4 +65,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

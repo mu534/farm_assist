@@ -26,20 +26,25 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Language Selector
-          LanguageSelector(
-            onEnglish: () async {
-              await languageProvider.changeLanguage('en');
-              await LocalizationService().changeLocale('en');
-            },
-            onAmharic: () async {
-              await languageProvider.changeLanguage('am');
-              await LocalizationService().changeLocale('am');
-            },
-            onOromo: () async {
-              await languageProvider.changeLanguage('om');
-              await LocalizationService().changeLocale('om');
-            },
-          ),
+         LanguageSelector(
+  onEnglish: () async {
+    await languageProvider.changeLanguage('en');
+    // Use the provider instance instead of creating a new one
+    final localizationService = Provider.of<LocalizationService>(context, listen: false);
+    await localizationService.changeLocale('en');
+  },
+  onAmharic: () async {
+    await languageProvider.changeLanguage('am');
+    final localizationService = Provider.of<LocalizationService>(context, listen: false);
+    await localizationService.changeLocale('am');
+  },
+  onOromo: () async {
+    await languageProvider.changeLanguage('om');
+    final localizationService = Provider.of<LocalizationService>(context, listen: false);
+    await localizationService.changeLocale('om');
+  },
+),
+
 
           const SizedBox(height: 24),
           _buildCard(
