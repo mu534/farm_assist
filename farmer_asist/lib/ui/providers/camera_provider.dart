@@ -14,6 +14,24 @@ class CameraProvider extends ChangeNotifier {
     options: ImageLabelerOptions(confidenceThreshold: 0.5),
   );
 
+  /// Process camera image stream
+  void _processCameraImage(CameraImage image) async {
+    if (isDetecting) return;
+    isDetecting = true;
+
+    try {
+      final inputImage = _convertCameraImage(image);
+      final imageLabels = await _imageLabeler.processImage(inputImage);
+      labels = imageLabels;
+      // Optionally, map labels to PlantDiseaseModel here
+      notifyListeners();
+    } catch (e) {
+      // Handle error
+    } finally {
+      isDetecting = false;
+    }
+  }
+
   /// Initialize camera and start real-time detection
   Future<void> initializeCamera(CameraDescription camera) async {
     controller = CameraController(
@@ -32,24 +50,19 @@ class CameraProvider extends ChangeNotifier {
 
   /// Convert CameraImage to InputImage (supports YUV420 and BGRA8888)
   InputImage _convertCameraImage(CameraImage image) {
-    // Concatenate all plane bytes
+    if (image.format.group != ImageFormatGroup.yuv420 &&
+        image.format.group != ImageFormatGroup.bgra8888) {
+      throw Exception('Unsupported image format: ${image.format.group}');
+    }
+
     final allBytes = image.planes.fold<Uint8List>(
       Uint8List(0),
-      (previous, plane) => Uint8List.fromList(previous + plane.bytes),
+      (prev, plane) => Uint8List.fromList(prev + plane.bytes),
     );
 
-    // Detect format dynamically
-    InputImageFormat format;
-    switch (image.format.group) {
-      case ImageFormatGroup.yuv420:
-        format = InputImageFormat.yuv420;
-        break;
-      case ImageFormatGroup.bgra8888:
-        format = InputImageFormat.bgra8888;
-        break;
-      default:
-        throw Exception('Unsupported image format: ${image.format.group}');
-    }
+    final format = image.format.group == ImageFormatGroup.yuv420
+        ? InputImageFormat.yuv420
+        : InputImageFormat.bgra8888;
 
     final metadata = InputImageMetadata(
       size: Size(image.width.toDouble(), image.height.toDouble()),
@@ -59,40 +72,5 @@ class CameraProvider extends ChangeNotifier {
     );
 
     return InputImage.fromBytes(bytes: allBytes, metadata: metadata);
-  }
-
-  /// Process camera frames in real-time
-  void _processCameraImage(CameraImage image) async {
-    if (isDetecting) return;
-    isDetecting = true;
-
-    try {
-      final inputImage = _convertCameraImage(image);
-      labels = await _imageLabeler.processImage(inputImage);
-
-      if (labels.isNotEmpty) {
-        final topLabel = labels.first;
-        detectedDisease = PlantDiseaseModel(
-          diseaseName: topLabel.label,
-          recommendation: 'Check plant health guide',
-          confidence: topLabel.confidence,
-        );
-      } else {
-        detectedDisease = null;
-      }
-
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Detection error: $e');
-    } finally {
-      isDetecting = false;
-    }
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    _imageLabeler.close();
-    super.dispose();
   }
 }

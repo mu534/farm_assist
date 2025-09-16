@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '/core/themes.dart';
 import '../models/plant_disease_model.dart';
-import 'pa/services/ai_service.dart';
+import '../services/ai_service.dart';
 
 class ResultScreen extends StatefulWidget {
   final String imagePath;
