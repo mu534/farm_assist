@@ -27,9 +27,8 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-
     if (widget.result != null) {
-      // Precomputed result
+      // Use precomputed result
       _result = widget.result;
       _isLoading = false;
     } else if (widget.imagePath != null) {
@@ -40,6 +39,7 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  /// Calls AI API to analyze the captured image
   Future<void> _analyzeImage() async {
     try {
       final file = File(widget.imagePath!);
@@ -51,6 +51,7 @@ class _ResultScreenState extends State<ResultScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Failed to analyze image. Please try again.';
         _isLoading = false;
@@ -81,6 +82,7 @@ class _ResultScreenState extends State<ResultScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Image preview
                   if (widget.imagePath != null)
                     Container(
                       width: double.infinity,
@@ -101,6 +103,8 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                     ),
                   const SizedBox(height: 24),
+
+                  // Disease information
                   Text('Disease Detected:', style: AppTextStyles.heading2),
                   const SizedBox(height: 8),
                   Text(
