@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:camera/camera.dart';
@@ -27,7 +26,6 @@ class _CameraScreenState extends State<CameraScreen> {
     _cameras = await availableCameras();
     if (_cameras.isEmpty) return;
 
-    // Access provider safely without listening
     final cameraProvider = Provider.of<CameraProvider>(context, listen: false);
     await cameraProvider.initializeCamera(_cameras.first);
 
@@ -45,25 +43,20 @@ class _CameraScreenState extends State<CameraScreen> {
       final XFile file = await controller.takePicture();
       if (!mounted) return;
 
-      // Only navigate if a disease has been detected
-      if (cameraProvider.detectedDisease != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ResultScreen(
-              result: cameraProvider.detectedDisease!,
-              imagePath: file.path,
-            ),
+      // Navigate even if no disease detected, but show message
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResultScreen(
+            result: cameraProvider.detectedDisease,
+            imagePath: file.path,
           ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No leaf detected yet.')),
-        );
-      }
+        ),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -74,7 +67,10 @@ class _CameraScreenState extends State<CameraScreen> {
         return Scaffold(
           backgroundColor: AppColors.backgroundLight,
           appBar: AppBar(
-            title: const Text('Capture Plant Image', style: AppTextStyles.heading2),
+            title: const Text(
+              'Capture Plant Image',
+              style: AppTextStyles.heading2,
+            ),
             backgroundColor: AppColors.backgroundLight,
             elevation: 1,
             iconTheme: const IconThemeData(color: AppColors.primaryIndigo),
@@ -82,18 +78,54 @@ class _CameraScreenState extends State<CameraScreen> {
           body: _isInitialized
               ? Stack(
                   children: [
+                    // Camera preview
                     if (cameraProvider.controller != null)
                       CameraPreview(cameraProvider.controller!),
+
+                    // Centered guide frame
                     Center(
                       child: Container(
                         width: 250,
                         height: 250,
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.accentEmerald, width: 3),
+                          border: Border.all(
+                            color: AppColors.accentEmerald,
+                            width: 3,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
+
+                    // Real-time detection label overlay
+                    Positioned(
+                      top: 50,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            cameraProvider.detectedDisease != null
+                                ? '${cameraProvider.detectedDisease!.diseaseName} (${(cameraProvider.detectedDisease!.confidence * 100).toStringAsFixed(1)}%)'
+                                : 'Detecting leaf...',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Capture button
                     Positioned(
                       bottom: 40,
                       left: 0,
@@ -106,7 +138,11 @@ class _CameraScreenState extends State<CameraScreen> {
                             padding: const EdgeInsets.all(20),
                             backgroundColor: AppColors.accentEmerald,
                           ),
-                          child: const Icon(Icons.camera_alt, size: 32, color: Colors.white),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 32,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
