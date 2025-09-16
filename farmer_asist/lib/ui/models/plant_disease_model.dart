@@ -1,11 +1,11 @@
 class PlantDiseaseModel {
   final String diseaseName;
-  final String recommendation;
   final double confidence;
+  final String recommendation;
 
   PlantDiseaseModel({
     required this.diseaseName,
-    required this.recommendation,
     required this.confidence,
+    required this.recommendation,
   });
 }

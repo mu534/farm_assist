@@ -1,61 +1,34 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:farmer_asist/ui/models/plant_disease_model.dart';
 
-/// AIService simulates plant disease detection.
-/// In production, connect this to your ML model or backend API.
 class AIService {
-  /// Analyze image and return PlantDiseaseModel
-  Future<PlantDiseaseModel> analyzeImage(File image) async {
+  final String apiUrl =
+      "https://your-ai-api.com/analyze"; // replace with endpoint
+
+  Future<PlantDiseaseModel?> analyzeImage(File imageFile) async {
     try {
-      // 🔹 Simulate API/ML model processing delay
-      await Future.delayed(const Duration(seconds: 2));
+      final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFile.path),
+      );
 
-      if (kDebugMode) {
-        print("Analyzing image: ${image.path}");
-      }
+      final response = await request.send();
+      if (response.statusCode != 200) return null;
 
-      // Mocked disease detection logic
-      final diseaseDetected = _mockDiseaseDetection();
+      final resBody = await response.stream.bytesToString();
+      final jsonData = json.decode(resBody);
 
       return PlantDiseaseModel(
-        diseaseName: diseaseDetected['disease']!,
-        recommendation: diseaseDetected['recommendation']!,
-        confidence: double.parse(diseaseDetected['confidence']!),
+        diseaseName: jsonData['disease_name'],
+        confidence: (jsonData['confidence'] as num).toDouble(),
+        recommendation:
+            jsonData['recommendation'] ?? 'Check plant health guide',
       );
     } catch (e) {
-      debugPrint("AIService Error: $e");
-      throw Exception("Failed to analyze image");
+      print('API error: $e');
+      return null;
     }
-  }
-
-  /// Mock disease detection (replace with real AI model)
-  Map<String, String> _mockDiseaseDetection() {
-    final diseases = [
-      {
-        "disease": "Leaf Blight",
-        "recommendation":
-            "Apply copper-based fungicides and avoid overhead watering.",
-        "confidence": "0.92",
-      },
-      {
-        "disease": "Powdery Mildew",
-        "recommendation": "Use sulfur sprays and improve air circulation.",
-        "confidence": "0.88",
-      },
-      {
-        "disease": "Rust",
-        "recommendation": "Remove infected leaves and apply fungicides.",
-        "confidence": "0.85",
-      },
-      {
-        "disease": "Healthy",
-        "recommendation": "No treatment needed. Maintain proper care.",
-        "confidence": "0.95",
-      },
-    ];
-
-    diseases.shuffle();
-    return diseases.first;
   }
 }
