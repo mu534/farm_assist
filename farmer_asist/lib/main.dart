@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:camera/camera.dart';
 
 import 'package:farmer_asist/ui/providers/language_provider.dart';
 import 'package:farmer_asist/ui/providers/camera_provider.dart';
 import 'package:farmer_asist/ui/services/localization_service.dart';
 import 'package:farmer_asist/ui/screens/splash_screen.dart';
 import 'package:farmer_asist/ui/screens/onboarding_screen.dart';
-import 'package:camera/camera.dart';
 import 'core/themes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load available cameras
   final cameras = await availableCameras();
-  final firstCamera = cameras.first;
+  final firstCamera = cameras.isNotEmpty
+      ? cameras.first
+      : throw Exception('No camera found on device');
 
-  // Initialize language provider
   final languageProvider = LanguageProvider();
   await languageProvider.loadSavedLanguage();
 
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Widget to initialize the camera and navigate to SplashScreen
+/// Initializes camera before showing SplashScreen
 class CameraInitializer extends StatefulWidget {
   final CameraDescription camera;
   const CameraInitializer({super.key, required this.camera});
@@ -76,6 +76,7 @@ class _CameraInitializerState extends State<CameraInitializer> {
   Future<void> _initializeCamera() async {
     final cameraProvider = Provider.of<CameraProvider>(context, listen: false);
     await cameraProvider.initializeCamera(widget.camera);
+    if (!mounted) return;
     setState(() => _initialized = true);
   }
 
@@ -84,6 +85,6 @@ class _CameraInitializerState extends State<CameraInitializer> {
     if (!_initialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return const SplashScreen(); // Navigate to your splash screen after camera init
+    return const SplashScreen();
   }
 }

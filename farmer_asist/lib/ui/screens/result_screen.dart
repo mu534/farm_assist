@@ -1,14 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:farmer_asist/core/themes.dart';
-import 'package:farmer_asist/ui/models/plant_disease_model.dart';
-import 'package:farmer_asist/ui/services/ai_service.dart';
+import '/core/themes.dart';
+import '/ui/models/plant_disease_model.dart';
+import '/ui/services/ai_service.dart';
 
 class ResultScreen extends StatefulWidget {
   final String? imagePath;
   final PlantDiseaseModel? result;
 
-  const ResultScreen({super.key, this.imagePath, this.result});
+  const ResultScreen({super.key, this.imagePath, this.result})
+    : assert(
+        imagePath != null || result != null,
+        'Either imagePath or result must be provided',
+      );
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -23,23 +27,20 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
+
     if (widget.result != null) {
+      // Precomputed result
       _result = widget.result;
       _isLoading = false;
     } else if (widget.imagePath != null) {
       _analyzeImage();
     } else {
-      _error = "No image or result provided";
+      _error = 'No image or result provided';
       _isLoading = false;
     }
   }
 
   Future<void> _analyzeImage() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
     try {
       final file = File(widget.imagePath!);
       final analysis = await _aiService.analyzeImage(file);
@@ -50,18 +51,11 @@ class _ResultScreenState extends State<ResultScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
       setState(() {
-        _error = "Failed to analyze image. Please try again.";
+        _error = 'Failed to analyze image. Please try again.';
         _isLoading = false;
       });
     }
-  }
-
-  Color _getConfidenceColor(double confidence) {
-    if (confidence >= 0.8) return Colors.green;
-    if (confidence >= 0.5) return Colors.orange;
-    return Colors.red;
   }
 
   @override
@@ -80,29 +74,13 @@ class _ResultScreenState extends State<ResultScreen> {
             )
           : _error != null
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(_error!, style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _analyzeImage,
-                    child: const Text('Retry Analysis'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentEmerald,
-                    ),
-                  ),
-                ],
-              ),
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
             )
-          : _result == null
-          ? const Center(child: Text('No result found'))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image Preview
                   if (widget.imagePath != null)
                     Container(
                       width: double.infinity,
@@ -123,73 +101,28 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                     ),
                   const SizedBox(height: 24),
-
-                  // Disease Info
                   Text('Disease Detected:', style: AppTextStyles.heading2),
                   const SizedBox(height: 8),
                   Text(
-                    _result!.diseaseName,
+                    _result?.diseaseName ?? 'Unknown',
                     style: AppTextStyles.heading1.copyWith(
                       color: AppColors.primaryIndigo,
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Recommendation
                   Text('Recommendation:', style: AppTextStyles.heading2),
                   const SizedBox(height: 8),
-                  Text(_result!.recommendation, style: AppTextStyles.bodyText),
-                  const SizedBox(height: 16),
-
-                  // Confidence with colored bar
-                  Text('Confidence:', style: AppTextStyles.heading2),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: _getConfidenceColor(
-                              _result!.confidence,
-                            ).withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: FractionallySizedBox(
-                            widthFactor: _result!.confidence,
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: _getConfidenceColor(_result!.confidence),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${(_result!.confidence * 100).toStringAsFixed(1)}%',
-                        style: AppTextStyles.bodyText.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    _result?.recommendation ?? 'No recommendation',
+                    style: AppTextStyles.bodyText,
                   ),
-                  const SizedBox(height: 24),
-
-                  // Re-analyze button if image available
-                  if (widget.imagePath != null)
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: _analyzeImage,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Re-analyze Image'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentEmerald,
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Confidence: ${(100 * (_result?.confidence ?? 0)).toStringAsFixed(1)}%',
+                    style: AppTextStyles.bodyText.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
                 ],
               ),
             ),

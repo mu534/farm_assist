@@ -7,24 +7,29 @@ import 'package:farmer_asist/ui/models/plant_disease_model.dart';
 class CameraProvider extends ChangeNotifier {
   CameraController? controller;
   bool isDetecting = false;
+
+  /// ML Kit labels detected from the camera
   List<ImageLabel> labels = [];
+
+  /// Detected disease info (nullable)
   PlantDiseaseModel? detectedDisease;
 
-  final ImageLabeler _imageLabeler =
-      ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.5));
+  /// ML Kit Image Labeler
+  final ImageLabeler _imageLabeler = ImageLabeler(
+    options: ImageLabelerOptions(confidenceThreshold: 0.5),
+  );
 
   /// Initialize camera and start real-time detection
   Future<void> initializeCamera(CameraDescription camera) async {
     controller = CameraController(
       camera,
-      ResolutionPreset.medium, // medium for real-time performance
+      ResolutionPreset.medium,
       enableAudio: false,
     );
 
     await controller!.initialize();
 
-    // Start real-time stream
-    await controller!.startImageStream((image) => _processCameraImage(image));
+    await controller!.startImageStream(_processCameraImage);
 
     notifyListeners();
   }
@@ -36,7 +41,6 @@ class CameraProvider extends ChangeNotifier {
       (previous, plane) => Uint8List.fromList(previous + plane.bytes),
     );
 
-    // Metadata required for ML Kit
     final metadata = InputImageMetadata(
       size: Size(image.width.toDouble(), image.height.toDouble()),
       rotation: InputImageRotation.rotation0deg,
@@ -47,7 +51,7 @@ class CameraProvider extends ChangeNotifier {
     return InputImage.fromBytes(bytes: allBytes, metadata: metadata);
   }
 
-  /// Process each camera frame
+  /// Process camera frames
   void _processCameraImage(CameraImage image) async {
     if (isDetecting) return;
     isDetecting = true;
