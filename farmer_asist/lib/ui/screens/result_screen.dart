@@ -24,7 +24,6 @@ class _ResultScreenState extends State<ResultScreen> {
   void initState() {
     super.initState();
     if (widget.result != null) {
-      // Use precomputed result
       _result = widget.result;
       _isLoading = false;
     } else if (widget.imagePath != null) {
@@ -36,21 +35,33 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _analyzeImage() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
       final file = File(widget.imagePath!);
       final analysis = await _aiService.analyzeImage(file);
 
       if (!mounted) return;
       setState(() {
-        _result = analysis; // ✅ this is already PlantDiseaseModel
+        _result = analysis;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = "Failed to analyze image. Please try again.";
         _isLoading = false;
       });
     }
+  }
+
+  Color _getConfidenceColor(double confidence) {
+    if (confidence >= 0.8) return Colors.green;
+    if (confidence >= 0.5) return Colors.orange;
+    return Colors.red;
   }
 
   @override
@@ -69,7 +80,20 @@ class _ResultScreenState extends State<ResultScreen> {
             )
           : _error != null
           ? Center(
-              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_error!, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _analyzeImage,
+                    child: const Text('Retry Analysis'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentEmerald,
+                    ),
+                  ),
+                ],
+              ),
             )
           : _result == null
           ? const Center(child: Text('No result found'))
@@ -111,17 +135,61 @@ class _ResultScreenState extends State<ResultScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Recommendation
                   Text('Recommendation:', style: AppTextStyles.heading2),
                   const SizedBox(height: 8),
                   Text(_result!.recommendation, style: AppTextStyles.bodyText),
                   const SizedBox(height: 16),
 
-                  Text(
-                    'Confidence: ${(100 * _result!.confidence).toStringAsFixed(1)}%',
-                    style: AppTextStyles.bodyText.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  // Confidence with colored bar
+                  Text('Confidence:', style: AppTextStyles.heading2),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: _getConfidenceColor(
+                              _result!.confidence,
+                            ).withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: FractionallySizedBox(
+                            widthFactor: _result!.confidence,
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _getConfidenceColor(_result!.confidence),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(_result!.confidence * 100).toStringAsFixed(1)}%',
+                        style: AppTextStyles.bodyText.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 24),
+
+                  // Re-analyze button if image available
+                  if (widget.imagePath != null)
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: _analyzeImage,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Re-analyze Image'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accentEmerald,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

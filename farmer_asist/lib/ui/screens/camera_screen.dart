@@ -43,7 +43,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final XFile file = await controller.takePicture();
       if (!mounted) return;
 
-      // Navigate even if no disease detected, but show message
+      // Navigation
       Navigator.push(
         context,
         MaterialPageRoute(
