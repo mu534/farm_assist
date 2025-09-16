@@ -1,20 +1,15 @@
 import 'dart:typed_data';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
-import 'package:farmer_asist/ui/models/plant_disease_model.dart';
+import '../models/plant_disease_model.dart';
 
 class CameraProvider extends ChangeNotifier {
   CameraController? controller;
   bool isDetecting = false;
-
-  /// ML Kit labels detected from the camera
   List<ImageLabel> labels = [];
-
-  /// Detected disease info (nullable)
   PlantDiseaseModel? detectedDisease;
 
-  /// ML Kit Image Labeler
   final ImageLabeler _imageLabeler = ImageLabeler(
     options: ImageLabelerOptions(confidenceThreshold: 0.5),
   );
@@ -29,29 +24,44 @@ class CameraProvider extends ChangeNotifier {
 
     await controller!.initialize();
 
+    // Start image stream
     await controller!.startImageStream(_processCameraImage);
 
     notifyListeners();
   }
 
-  /// Convert CameraImage to InputImage
+  /// Convert CameraImage to InputImage (supports YUV420 and BGRA8888)
   InputImage _convertCameraImage(CameraImage image) {
+    // Concatenate all plane bytes
     final allBytes = image.planes.fold<Uint8List>(
       Uint8List(0),
       (previous, plane) => Uint8List.fromList(previous + plane.bytes),
     );
 
+    // Detect format dynamically
+    InputImageFormat format;
+    switch (image.format.group) {
+      case ImageFormatGroup.yuv420:
+        format = InputImageFormat.yuv420;
+        break;
+      case ImageFormatGroup.bgra8888:
+        format = InputImageFormat.bgra8888;
+        break;
+      default:
+        throw Exception('Unsupported image format: ${image.format.group}');
+    }
+
     final metadata = InputImageMetadata(
       size: Size(image.width.toDouble(), image.height.toDouble()),
       rotation: InputImageRotation.rotation0deg,
       bytesPerRow: image.planes[0].bytesPerRow,
-      format: InputImageFormat.bgra8888,
+      format: format,
     );
 
     return InputImage.fromBytes(bytes: allBytes, metadata: metadata);
   }
 
-  /// Process camera frames
+  /// Process camera frames in real-time
   void _processCameraImage(CameraImage image) async {
     if (isDetecting) return;
     isDetecting = true;

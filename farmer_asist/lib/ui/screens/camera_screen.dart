@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:camera/camera.dart';
-import '../providers/camera_provider.dart';
 import 'result_screen.dart';
 import '/core/themes.dart';
+import '../providers/camera_provider.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
