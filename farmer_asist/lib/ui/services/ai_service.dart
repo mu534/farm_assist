@@ -1,34 +1,35 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:farmer_asist/ui/models/plant_disease_model.dart';
+import '../models/plant_disease_model.dart';
 
 class AIService {
-  final String apiUrl =
-      "https://your-ai-api.com/analyze"; // replace with endpoint
+  final String apiUrl = "https://your-ai-api.com/analyze";
+  final String apiKey = "rf_SjcOwyYqHMb43Dtl7HliJr5w0Y62";
 
-  Future<PlantDiseaseModel?> analyzeImage(File imageFile) async {
-    try {
-      final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-      request.files.add(
-        await http.MultipartFile.fromPath('image', imageFile.path),
-      );
+  /// Send image to AI API and return PlantDiseaseModel
+  Future<PlantDiseaseModel> analyzeImage(File imageFile) async {
+    final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
-      final response = await request.send();
-      if (response.statusCode != 200) return null;
+    request.headers['Authorization'] =
+        'Bearer $apiKey'; // include API key in headers
+    request.files.add(
+      await http.MultipartFile.fromPath('image', imageFile.path),
+    );
 
-      final resBody = await response.stream.bytesToString();
-      final jsonData = json.decode(resBody);
-
-      return PlantDiseaseModel(
-        diseaseName: jsonData['disease_name'],
-        confidence: (jsonData['confidence'] as num).toDouble(),
-        recommendation:
-            jsonData['recommendation'] ?? 'Check plant health guide',
-      );
-    } catch (e) {
-      print('API error: $e');
-      return null;
+    final response = await request.send();
+    if (response.statusCode != 200) {
+      throw Exception('Failed to analyze image: ${response.statusCode}');
     }
+
+    final responseBody = await response.stream.bytesToString();
+    final data = json.decode(responseBody);
+
+    // Map the API response to PlantDiseaseModel
+    return PlantDiseaseModel(
+      diseaseName: data['disease_name'] ?? 'Unknown',
+      recommendation: data['recommendation'] ?? 'No recommendation',
+      confidence: (data['confidence'] ?? 0).toDouble(),
+    );
   }
 }
