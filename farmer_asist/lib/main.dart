@@ -13,9 +13,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final cameras = await availableCameras();
-  final firstCamera = cameras.isNotEmpty
-      ? cameras.first
-      : throw Exception('No camera found on device');
+  if (cameras.isEmpty) {
+    throw Exception('No camera found on device');
+  }
 
   final languageProvider = LanguageProvider();
   await languageProvider.loadSavedLanguage();
@@ -27,14 +27,14 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LocalizationService()),
         ChangeNotifierProvider(create: (_) => CameraProvider()),
       ],
-      child: MyApp(camera: firstCamera),
+      child: MyApp(cameras: cameras),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final CameraDescription camera;
-  const MyApp({super.key, required this.camera});
+  final List<CameraDescription> cameras;
+  const MyApp({super.key, required this.cameras});
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
           locale: languageProvider.currentLocale,
           supportedLocales: const [Locale('en'), Locale('am'), Locale('om')],
           localizationsDelegates: LocalizationService.localizationsDelegates,
-          home: CameraInitializer(camera: camera),
+          home: CameraInitializer(cameras: cameras),
           routes: {'/onboarding_screen': (context) => const OnboardingScreen()},
         );
       },
@@ -57,8 +57,8 @@ class MyApp extends StatelessWidget {
 
 /// Initializes camera before showing SplashScreen
 class CameraInitializer extends StatefulWidget {
-  final CameraDescription camera;
-  const CameraInitializer({super.key, required this.camera});
+  final List<CameraDescription> cameras;
+  const CameraInitializer({super.key, required this.cameras});
 
   @override
   State<CameraInitializer> createState() => _CameraInitializerState();
@@ -75,7 +75,7 @@ class _CameraInitializerState extends State<CameraInitializer> {
 
   Future<void> _initializeCamera() async {
     final cameraProvider = Provider.of<CameraProvider>(context, listen: false);
-    await cameraProvider.initializeCamera(widget.camera);
+    await cameraProvider.initializeCamera(widget.cameras);
     if (!mounted) return;
     setState(() => _initialized = true);
   }
