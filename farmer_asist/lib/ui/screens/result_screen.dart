@@ -26,6 +26,10 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _analyzeImage() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final file = File(widget.imagePath);
       final analysis = await _aiService.analyzeImage(file);
@@ -133,35 +137,46 @@ class _ResultScreenState extends State<ResultScreen> {
         backgroundColor: AppColors.backgroundLight,
         elevation: 2,
         iconTheme: const IconThemeData(color: AppColors.primaryIndigo),
+        actions: [
+          IconButton(
+            onPressed: _isLoading ? null : _analyzeImage,
+            icon: const Icon(Icons.refresh, color: AppColors.primaryIndigo),
+            tooltip: 'Re-analyze',
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Always show the image
-            Container(
-              width: double.infinity,
-              height: 250,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.accentEmerald,
-                  width: 2,
+      body: RefreshIndicator(
+        onRefresh: _analyzeImage,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Always show the image
+              Container(
+                width: double.infinity,
+                height: 250,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.accentEmerald,
+                    width: 2,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(widget.imagePath),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  File(widget.imagePath),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Display result / skeleton / error
-            _buildResultContent(),
-          ],
+              // Display result / skeleton / error
+              _buildResultContent(),
+            ],
+          ),
         ),
       ),
     );

@@ -40,12 +40,11 @@ class _CameraScreenState extends State<CameraScreen> {
     if (controller == null || !controller.value.isInitialized) return;
 
     try {
-      // Require plant in frame for capture
+      // Allow capture even if plant is not detected; just warn the user
       if (!cameraProvider.isPlantInFrame) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No plant detected. Align a plant in frame.')),
+          const SnackBar(content: Text('No plant detected. Capturing anyway...')),
         );
-        return;
       }
       final file = await controller.takePicture();
       if (!mounted) return;
@@ -115,14 +114,27 @@ class _CameraScreenState extends State<CameraScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           color: Colors.black54,
-                          child: Text(
-                            cameraProvider.isPlantInFrame
-                                ? 'Plant detected'
-                                : 'Align a plant in the frame',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                cameraProvider.isPlantInFrame
+                                    ? 'Plant detected'
+                                    : 'Align a plant in the frame',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              if (cameraProvider.detectedObjects.isNotEmpty)
+                                Text(
+                                  'Objects: ${cameraProvider.detectedObjects.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -166,6 +178,12 @@ class _CameraScreenState extends State<CameraScreen> {
                             IconButton(
                               onPressed: cameraProvider.switchCamera,
                               icon: const Icon(Icons.cameraswitch, color: Colors.white),
+                              style: IconButton.styleFrom(backgroundColor: Colors.black45),
+                            ),
+                            const SizedBox(width: 12),
+                            IconButton(
+                              onPressed: cameraProvider.testPlantDetection,
+                              icon: const Icon(Icons.bug_report, color: Colors.white),
                               style: IconButton.styleFrom(backgroundColor: Colors.black45),
                             ),
                           ],
