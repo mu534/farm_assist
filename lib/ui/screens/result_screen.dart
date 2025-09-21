@@ -54,7 +54,7 @@ class _ResultScreenState extends State<ResultScreen> {
   String _formatTimestamp(DateTime? ts) {
     if (ts == null) return '';
     final time = TimeOfDay.fromDateTime(ts);
-    final two = (int n) => n.toString().padLeft(2, '0');
+    String two(int n) => n.toString().padLeft(2, '0');
     return '${ts.year}-${two(ts.month)}-${two(ts.day)}  ${two(time.hour)}:${two(time.minute)}';
   }
 
